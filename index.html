@@ -1,0 +1,606 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>打擊揮棒動作實驗室</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef1f4;--panel:#fff;--panel2:#f5f7fa;--line:#d5dbe3;--text:#122033;--muted:#5b6b80;--act:#e3661b;--tpl:#0a9e93;--bad:#c2410c;--good:#15803d;
+ --stage:#e3e9f0;--chalk:#fbfbf8;--grid-a:#aab6c4;--grid-b:#cfd7e1;--sky:#cddfee;--sky2:#e8eff5;--dirt:#c9a27e;--dirt2:#b08660;
+ --act-soft:rgba(227,102,27,.07);--act-soft2:rgba(227,102,27,.2);--num:"Barlow Condensed","Arial Narrow",sans-serif;
+ --body:"PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;color-scheme:light;
+ box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1726;--panel:#15213a;--panel2:#1a2844;--line:#27365a;--text:#e9eef6;--muted:#8fa0bb;--act:#ff8a3d;--tpl:#2ee6d6;--bad:#ff9f6e;--good:#6ee7a8;
+ --stage:#0a1221;--chalk:#eef2f7;--grid-a:#2f4166;--grid-b:#1a2742;--sky:#0c1a31;--sky2:#1b2d4d;--dirt:#5b402c;--dirt2:#3d2a1d;--act-soft:rgba(255,138,61,.08);--act-soft2:rgba(255,138,61,.22);color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0e1726;--panel:#15213a;--panel2:#1a2844;--line:#27365a;--text:#e9eef6;--muted:#8fa0bb;--act:#ff8a3d;--tpl:#2ee6d6;--bad:#ff9f6e;--good:#6ee7a8;
+ --stage:#0a1221;--chalk:#eef2f7;--grid-a:#2f4166;--grid-b:#1a2742;--sky:#0c1a31;--sky2:#1b2d4d;--dirt:#5b402c;--dirt2:#3d2a1d;--act-soft:rgba(255,138,61,.08);--act-soft2:rgba(255,138,61,.22);color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 var(--body)}
+.app{max-width:1360px;margin:0 auto;padding:18px clamp(12px,3vw,28px) 40px}
+button,select,.btn{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--tpl);outline-offset:2px}
+header.top{display:flex;flex-wrap:wrap;gap:14px 24px;align-items:flex-end;justify-content:space-between;margin-bottom:16px}
+h1{font:700 clamp(30px,5vw,46px)/1 var(--num);letter-spacing:.01em;margin:0}
+h1 span{font-family:var(--body);font-weight:700;font-size:.62em;display:block;margin-top:6px;letter-spacing:.02em}
+#status{color:var(--muted);margin:6px 0 0;font-size:14px}
+.acts{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel);padding:8px 14px;border-radius:8px;cursor:pointer;font-size:14px}
+.btn.pri{background:var(--act);border-color:var(--act);color:#fff;font-weight:600}
+.btn input{display:none}
+.acts label.sm{font-size:13px;color:var(--muted);display:flex;gap:6px;align-items:center}
+select{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 8px}
+.stage{display:grid;grid-template-columns:1fr 1fr;grid-template-areas:"three vid";gap:10px}
+.pane{position:relative;aspect-ratio:4/3;border-radius:10px;overflow:hidden;background:var(--stage);border:1px solid var(--line)}
+.pw{display:flex;flex-direction:column;gap:6px;min-width:0}.p3{grid-area:three}.pv{grid-area:vid}
+#three canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+#three{position:absolute;inset:0}
+.ph{display:flex;justify-content:space-between;align-items:center;gap:6px 10px;flex-wrap:wrap;font-size:13px;min-height:28px}
+.ph .lg{display:flex;gap:12px;align-items:center;color:var(--muted)}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:0}
+.dot.a{background:var(--act)}.dot.t{background:var(--tpl)}
+.views{display:flex;gap:4px;overflow-x:auto;max-width:100%;-webkit-overflow-scrolling:touch}
+.views button{border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:3px 10px;font-size:12px;cursor:pointer;white-space:nowrap}
+#vbox{position:absolute;inset:0}
+#vid{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}
+#cv2d{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#impact{position:absolute;right:8px;top:8px;z-index:3;font:700 clamp(14px,2.4vw,20px)/1 var(--num);letter-spacing:.04em;background:var(--act);color:#fff;padding:6px 10px;border-radius:6px}
+#busy{position:absolute;inset:0;z-index:4;display:flex;flex-direction:column;gap:10px;align-items:center;justify-content:center;background:color-mix(in srgb,var(--stage) 88%,transparent);padding:20px;text-align:center}
+#busy .bar{width:min(320px,80%);height:6px;border-radius:3px;background:var(--line);overflow:hidden}#busyBar{display:block;height:100%;width:0;background:var(--act)}
+.ctrl{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin:10px 0 6px}
+.ctrl .grp{display:flex;gap:6px;align-items:center}
+.ctrl button{border:1px solid var(--line);background:var(--panel);border-radius:7px;padding:7px 12px;cursor:pointer;font-size:14px}
+#play{min-width:68px;background:var(--text);color:var(--bg);border-color:var(--text);font-weight:600}
+#toImpact{border-color:var(--act);color:var(--act);font-weight:600}
+.ctrl label{font-size:13px;color:var(--muted);display:flex;gap:5px;align-items:center;cursor:pointer}
+.tnum{font:600 16px var(--num);min-width:128px}.tnum b{color:var(--muted);font-weight:500;margin-left:8px}
+#scrub{flex:1 1 220px;accent-color:var(--act)}
+#tl{display:block;width:100%;height:84px;background:var(--panel);border:1px solid var(--line);border-radius:8px;cursor:ew-resize;touch-action:none}
+.cap{font-size:12px;color:var(--muted);margin:4px 2px 0}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:18px 0 12px}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:5px 13px;cursor:pointer;font-size:14px}
+.chip.on{background:var(--act);border-color:var(--act);color:#fff}.chip.off{opacity:.45}
+.chip i{font-style:normal;font:600 12px var(--num);margin-left:6px;background:color-mix(in srgb,currentColor 18%,transparent);padding:0 6px;border-radius:9px}
+h2{font:700 24px/1.1 var(--num);margin:0 0 10px;letter-spacing:.01em}
+h2 small{font:13px var(--body);color:var(--muted);margin-left:8px}
+.metrics{display:grid;grid-template-columns:repeat(auto-fill,minmax(172px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.mc{background:var(--panel);padding:12px 14px 13px;position:relative}
+.mc::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--good)}.mc.bad::before{background:var(--bad)}
+.mt{font-size:13px;color:var(--muted)}
+.mv{font:700 40px/1.05 var(--num);font-variant-numeric:tabular-nums;margin:2px 0 4px}.mv small{font-size:17px;font-weight:500;margin-left:3px;color:var(--muted)}
+.mi{display:flex;gap:8px;font:600 14px var(--num)}.mi .tp{color:var(--tpl)}.mc.bad .dl{color:var(--bad)}.mc.ok .dl{color:var(--good)}
+.ms{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.45}
+.grid2{display:grid;grid-template-columns:1.5fr 1fr;gap:10px;margin-top:22px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
+.card h3{font:700 19px var(--num);margin:0 0 8px}.card h3 small{font:12px var(--body);color:var(--muted);margin-left:6px}
+#ov{display:block;width:100%;height:220px}
+.fr{display:grid;grid-template-columns:7.5em 1fr 3em;gap:10px;align-items:center;margin:9px 0;font-size:14px}
+.fb{height:10px;background:var(--panel2);border-radius:5px;overflow:hidden;border:1px solid var(--line)}.fb b{display:block;height:100%;background:var(--bad)}
+.fc{font:600 15px var(--num);text-align:right}
+.tw{overflow-x:auto;margin-top:10px}
+table{border-collapse:collapse;width:100%;min-width:820px;font-size:14px}
+th,td{padding:8px 9px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th{font-size:12px;color:var(--muted);font-weight:500}th:last-child,td:last-child{text-align:left;white-space:normal}
+td{font:500 16px var(--num);font-variant-numeric:tabular-nums}
+tbody tr[data-s]{cursor:pointer}tbody tr[data-s]:hover{background:var(--panel2)}tbody tr.on{background:var(--act-soft2)}
+tr.avg td{font-weight:700;border-top:2px solid var(--line)}tr.tplr td{color:var(--tpl)}tr.avg td[colspan],tr.tplr td[colspan]{font:600 14px var(--body);text-align:left}
+td.tags span{display:inline-block;font:13px var(--body);border:1px solid var(--bad);color:var(--bad);border-radius:5px;padding:0 6px;margin:2px 4px 2px 0}
+td.tags em{font:13px var(--body);color:var(--good);font-style:normal}
+.empty{color:var(--muted);font-size:14px}
+details{margin-top:22px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 16px}
+summary{cursor:pointer;font-weight:600}
+details dl{display:grid;grid-template-columns:8em 1fr;gap:6px 14px;font-size:14px;max-width:78ch}details dt{font-weight:600}details dd{margin:0;color:var(--muted)}
+details p{font-size:14px;color:var(--muted);max-width:78ch}
+#err{margin-top:12px;border-color:var(--bad)}#err p{margin:6px 0;font-size:14px}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));max-width:min(560px,92vw);background:var(--text);color:var(--bg);padding:10px 16px;border-radius:8px;font-size:14px;z-index:9}
+.yt{margin-top:18px}.yt .row{display:flex;flex-wrap:wrap;gap:8px}
+.yt input{font:inherit;color:inherit;background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:8px 10px}
+#yturl{flex:1 1 260px;min-width:0}#ytstart{width:7.5em}
+#ytbox{margin-top:10px;aspect-ratio:16/9;border-radius:8px;overflow:hidden;background:#000;max-width:900px}
+#ytbox.tall{aspect-ratio:9/16;max-width:360px}#ytbox iframe{width:100%;height:100%;border:0;display:block}
+#ytopen{display:inline-block;margin-top:8px;font-size:14px;color:var(--tpl)}
+[hidden]{display:none!important}
+@media (max-width:860px){.stage{grid-template-columns:1fr;grid-template-areas:"three" "vid"}.grid2{grid-template-columns:1fr}.tnum{min-width:0}}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="top">
+ <div><h1>SWING LAB <small style="font:600 14px var(--body);color:var(--muted)">v1.3</small><span>打擊揮棒動作實驗室</span></h1><p id="status">載入中…</p></div>
+ <div class="acts">
+  <label class="btn pri">上傳打擊影片<input type="file" id="file" accept="video/*"></label>
+  <button class="btn" id="demo">載入示範資料</button>
+  <label class="sm">取樣<select id="sfps"><option value="30">30 fps</option><option value="60">60 fps</option><option value="120">120 fps</option></select></label>
+ </div>
+</header>
+<div class="card" id="err" hidden>
+ <h3 id="errT">姿勢辨識模型無法載入</h3>
+ <p id="errHint"></p>
+ <p class="cap">錯誤訊息：<span id="errMsg"></span></p>
+ <div class="acts"><label class="btn" id="modelBtn">選擇本機模型檔<input type="file" id="model" accept=".task"></label><button class="btn" id="errX">關閉</button></div>
+</div>
+<section class="stage">
+ <div class="pw p3"><div class="ph"><span class="lg"><span><i class="dot a"></i>實際動作</span><span><i class="dot t"></i>理想模板</span></span>
+  <span class="views" role="group" aria-label="3D 視角"><button data-view="0.55,1.2">斜前</button><button data-view="0,1.35">正面</button><button data-view="1.5708,1.35">投手</button><button data-view="-1.5708,1.35">捕手</button><button data-view="0.3,0.2">俯視</button></span></div>
+  <div class="pane"><div id="three"></div></div></div>
+ <div class="pw pv"><div class="ph"><span class="lg" id="vtag">模擬畫面</span></div>
+  <div class="pane"><div id="vbox"><video id="vid" playsinline muted preload="auto" hidden></video><canvas id="cv2d"></canvas></div>
+  <div id="impact" hidden>IMPACT</div>
+  <div id="busy" hidden><div id="busyMsg"></div><div class="bar"><span id="busyBar"></span></div><button class="btn" id="cancel">取消分析</button></div></div></div>
+</section>
+<div class="ctrl">
+ <div class="grp"><button id="play" aria-pressed="false">播放</button><button id="prev" aria-label="上一格">◀ 上一格</button><button id="next" aria-label="下一格">下一格 ▶</button><button id="toImpact">跳到擊球點</button></div>
+ <div class="grp"><select id="spd" aria-label="播放速度"><option value="0.1">0.1×</option><option value="0.25">0.25×</option><option value="0.5" selected>0.5×</option><option value="1">1×</option></select>
+  <span class="tnum" id="fl">影格 0</span><span class="tnum"><b id="tl2">0.00 s</b></span></div>
+ <input type="range" id="scrub" min="0" max="820" value="0" aria-label="影格">
+ <div class="grp"><label><input type="checkbox" id="tplT" checked>理想模板</label><label><input type="checkbox" id="trT" checked>手部軌跡</label><label><input type="checkbox" id="loopT" checked>單次循環</label></div>
+</div>
+<canvas id="tl" aria-label="整段影片手部速度時間軸"></canvas>
+<p class="cap">時間軸是整段影片的手部速度；色塊是偵測到的揮棒，虛線是 IMPACT。點一下或拖曳可跳轉。空白鍵播放、方向鍵逐格、I 跳到擊球點。</p>
+<div class="card yt"><h3>YouTube 參考影片<small>只供並排觀看對照，不做骨架辨識</small></h3>
+ <div class="row"><input id="yturl" type="url" inputmode="url" placeholder="貼上 YouTube 或 Shorts 網址" aria-label="YouTube 網址"><input id="ytstart" type="number" min="0" inputmode="numeric" placeholder="起始秒數" aria-label="起始秒數"><button class="btn pri" id="ytgo">載入</button></div>
+ <div id="ytbox" hidden></div><a id="ytopen" target="_blank" rel="noopener" hidden>在 YouTube 開啟 ↗</a>
+ <p class="cap">放慢或逐格請用 YouTube 播放器齒輪裡的「播放速度」；暫停後按 , 和 . 鍵可逐格。若這裡顯示空白，是環境擋住了內嵌畫面，下載後在本機開啟即可正常顯示。</p></div>
+<div class="chips" id="chips"></div>
+<h2 id="mTitle">平均</h2>
+<div class="metrics" id="metrics"></div>
+<div class="grid2">
+ <div class="card"><h3>揮棒疊圖<small>手部速度（m/s），以擊球點對齊；粗線為平均，青色虛線為模板</small></h3><canvas id="ov"></canvas></div>
+ <div class="card"><h3>瑕疵統計<small>納入平均的揮棒</small></h3><div id="flaws"></div></div>
+</div>
+<div class="card" style="margin-top:10px"><h3>每次揮棒<small>取消勾選可排除失誤的揮棒；點列可跳到該次</small></h3>
+<div class="tw"><table><thead><tr><th>納入</th><th>次</th><th>擊球影格</th><th>仰角</th><th>上身旋轉</th><th>肩髖分離</th><th>棒速 km/h</th><th>重心 cm</th><th>頭部 cm</th><th>髖先肩 ms</th><th>瑕疵</th></tr></thead><tbody id="tbody"></tbody></table></div></div>
+<details><summary>數據怎麼算</summary>
+<dl>
+<dt>擊球點</dt><dd>雙手腕中點的速度峰值。高於 max(2 m/s, 全段峰值 45%) 且間隔 1.5 秒以上的峰值視為一次揮棒。</dd>
+<dt>打擊仰角</dt><dd>擊球點前後一格手部位移向量與水平面的夾角。沒有追蹤球棒，所以是手部軌跡的近似值。</dd>
+<dt>上半身旋轉</dt><dd>雙肩連線在水平面的轉角：從最大蓄力位置轉到擊球點的角度。髖部同理。</dd>
+<dt>肩髖分離</dt><dd>肩線與髖線水平轉角差，相對準備姿勢的最大變化量。</dd>
+<dt>揮棒速度</dt><dd>擊球點附近手部峰值速度；棒速以 3.3 倍力臂比粗估，僅供同一人前後比較。</dd>
+<dt>重心轉移</dt><dd>骨盆中心沿「後腳 → 前腳」方向，從最後方位置到擊球點的前移距離。</dd>
+<dt>頭部位移</dt><dd>揮棒起點到擊球點之間，鼻尖相對起點的最大 3D 位移。</dd>
+<dt>髖部領先肩膀</dt><dd>髖與肩各自從蓄力點轉過 15° 的時間差，正值代表下半身先啟動。</dd>
+</dl>
+<p>瑕疵判定以理想模板為基準：仰角偏離 −6°／+8°、旋轉低於 82%、分離低於 70%、手速低於 88%、重心低於 70%、頭部多 4 cm 以上、肩膀先於髖部啟動。MediaPipe 的 3D 世界座標由單一鏡頭推估，深度方向誤差較大；揮棒只有約 0.15 秒，30 fps 只拍得到 4 到 5 格，建議用 120 fps 以上的慢動作影片，並固定機位、讓全身入鏡。</p>
+</details>
+</div>
+<div id="toast" hidden></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* ===== core：姿勢生成、揮棒偵測、數據計算（純邏輯） ===== */
+const V={
+ add:(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]],
+ sub:(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]],
+ mul:(a,s)=>[a[0]*s,a[1]*s,a[2]*s],
+ dot:(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2],
+ len:a=>Math.hypot(a[0],a[1],a[2]),
+ lerp:(a,b,u)=>[a[0]+(b[0]-a[0])*u,a[1]+(b[1]-a[1])*u,a[2]+(b[2]-a[2])*u],
+ norm:a=>{const l=Math.hypot(a[0],a[1],a[2])||1;return[a[0]/l,a[1]/l,a[2]/l]},
+ rotY:(a,deg)=>{const r=deg*Math.PI/180,c=Math.cos(r),s=Math.sin(r);return[a[0]*c+a[2]*s,a[1],-a[0]*s+a[2]*c]},
+ mid:(a,b)=>[(a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2]
+};
+const DEG=180/Math.PI;
+const BONES=[[11,12],[11,13],[13,15],[12,14],[14,16],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28],[27,29],[29,31],[27,31],[28,30],[30,32],[28,32],[15,17],[15,19],[17,19],[15,21],[16,18],[16,20],[18,20],[16,22],[0,1],[1,2],[2,3],[3,7],[0,4],[4,5],[5,6],[6,8],[9,10]];
+
+function cr(p0,p1,p2,p3,u){const u2=u*u,u3=u2*u;return .5*((2*p1)+(-p0+p2)*u+(2*p0-5*p1+4*p2-p3)*u2+(-p0+3*p1-3*p2+p3)*u3)}
+function interp(T,Vs,t){const n=T.length;if(t<=T[0])return Vs[0];if(t>=T[n-1])return Vs[n-1];
+ let i=0;while(i<n-2&&t>T[i+1])i++;const u=(t-T[i])/(T[i+1]-T[i]);
+ const a=Vs[Math.max(0,i-1)],b=Vs[i],c=Vs[i+1],d=Vs[Math.min(n-1,i+2)];
+ return Array.isArray(b)?b.map((_,k)=>cr(a[k],b[k],c[k],d[k],u)):cr(a,b,c,d,u)}
+
+/* 關鍵影格：準備、蓄力、啟動、擊球前、擊球、延伸、收棒 */
+const KT=[0,.60,1.00,1.06,1.10,1.15,1.75];
+const Z3=[0,0,0];
+const TPL_V={
+ hipRot:[-5,-18,2,30,52,72,95],
+ shRot:[-8,-30,-36,5,42,78,125],
+ cx:[-.03,-.11,.04,.11,.15,.17,.17],
+ squat:[.02,.03,.06,.06,.05,.03,0],
+ hands:[[-.16,.10,.14],[-.30,.12,.06],[-.22,.02,.12],[-.10,-.18,.30],[.22,-.22,.48],[.50,-.06,.30],[.10,.18,-.22]],
+ bat:[[-.25,.9,-.25],[-.55,.75,-.3],[-.75,.15,-.6],[-.5,-.25,.8],[.05,-.12,1],[.85,.05,.45],[-.55,.55,-.6]],
+ frontX:[.36,.33,.60,.62,.62,.62,.62],
+ frontY:[0,.10,0,0,0,0,0],
+ frontYaw:[0,0,15,30,45,55,60],
+ backHeel:[0,0,.01,.03,.06,.10,.12],
+ head:[Z3,Z3,Z3,Z3,Z3,Z3,Z3]
+};
+function makeChannels(p){
+ const st=p?p.stretch:1;
+ const Ta=KT.map((t,i)=>i>=3?KT[2]+(t-KT[2])*st:t);
+ const ch={};for(const k in TPL_V)ch[k]={t:Ta,v:JSON.parse(JSON.stringify(TPL_V[k]))};
+ if(!p)return ch;
+ ch.hipRot.v=TPL_V.hipRot.map((x,i)=>i==0?x:x*p.hip);
+ ch.shRot.v=TPL_V.shRot.map((x,i)=>i==0?x:(i<=3?ch.hipRot.v[i]+(x-TPL_V.hipRot[i])*p.sep:x*p.hip));
+ ch.shRot.t=Ta.map((t,i)=>(i==2||i==3)?t-p.early*.05:t);
+ ch.cx.v=TPL_V.cx.map(x=>TPL_V.cx[0]+(x-TPL_V.cx[0])*p.cx);
+ ch.head.v=[0,.3,.7,.9,1,1,1].map(u=>V.mul(p.head,u));
+ ch.hands.v[5][1]+=p.attack;ch.hands.v[4][1]-=p.attack*.3;ch.bat.v[5][1]+=p.attack*1.2;
+ return ch}
+function sampleCh(ch,t){const s={};for(const k in ch)s[k]=interp(ch[k].t,ch[k].v,t);return s}
+function endT(ch){const t=ch.hipRot.t;return t[t.length-1]}
+function lerpState(a,b,u){const s={};for(const k in a)s[k]=Array.isArray(a[k])?a[k].map((x,i)=>x+(b[k][i]-x)*u):a[k]+(b[k]-a[k])*u;return s}
+const smoothstep=u=>u*u*(3-2*u);
+function stateAtLocal(ch,lt){const E=endT(ch);if(lt<=0)return sampleCh(ch,0);if(lt<=E)return sampleCh(ch,lt);
+ const fin=sampleCh(ch,E);if(lt<=E+.45)return fin;if(lt<=E+1.45)return lerpState(fin,sampleCh(ch,0),smoothstep((lt-E-.45)));return sampleCh(ch,0)}
+
+function ik(A,B,a,b,pole){const d0=V.sub(B,A);let d=V.len(d0)||1e-6;const dir=V.mul(d0,1/d);d=Math.min(d,a+b-1e-3);
+ const x=(d*d+a*a-b*b)/(2*d),h=Math.sqrt(Math.max(0,a*a-x*x));const p=V.norm(V.sub(pole,V.mul(dir,V.dot(pole,dir))));
+ return V.add(A,V.add(V.mul(dir,x),V.mul(p,h)))}
+
+function buildPose(s){
+ const L=new Array(33);
+ const hc=[s.cx,.93-s.squat,0],hv=V.rotY([.15,0,0],s.hipRot);
+ L[23]=V.add(hc,hv);L[24]=V.sub(hc,hv);
+ const sc=[s.cx*.35,hc[1]+.50,.10],sv=V.rotY([.19,0,0],s.shRot);
+ L[11]=V.add(sc,sv);L[12]=V.sub(sc,sv);
+ const n=V.add(V.add(sc,[.07,.22,.02]),s.head);L[0]=n;
+ const F=[[-.015,.03,-.02],[-.02,.032,-.035],[-.03,.03,-.05],[-.015,.03,.02],[-.02,.032,.035],[-.03,.03,.05],[-.10,.01,-.07],[-.10,.01,.07],[-.01,-.035,-.02],[-.01,-.035,.02]];
+ F.forEach((o,i)=>L[i+1]=V.add(n,o));
+ const bd=V.norm(s.bat),grip=V.add(sc,s.hands);
+ L[15]=V.sub(grip,V.mul(bd,.02));L[16]=V.add(grip,V.mul(bd,.07));
+ L[13]=ik(L[11],L[15],.29,.27,[0,-1,-.3]);L[14]=ik(L[12],L[16],.29,.27,[0,-1,-.3]);
+ [[15,13,17,19,21,-1],[16,14,18,20,22,1]].forEach(([w,e,p,i,t,sd])=>{const W=L[w],f=V.norm(V.sub(W,L[e]));
+  L[p]=V.add(W,V.add(V.mul(f,.06),[0,0,.02*sd]));L[i]=V.add(W,V.add(V.mul(f,.07),[0,0,-.02*sd]));L[t]=V.add(W,V.add(V.mul(f,.04),[0,.02,0]))});
+ const fA=[s.frontX,.08+Math.max(0,s.frontY),0],bA=[-.40,.08+s.backHeel*.6,0];L[27]=fA;L[28]=bA;
+ const fy=s.frontYaw,by=Math.max(0,s.hipRot*.35);
+ L[29]=V.add(fA,V.add(V.rotY([0,0,-.06],fy),[0,-.05,0]));L[31]=V.add(fA,V.add(V.rotY([0,0,.17],fy),[0,-.06,0]));
+ L[30]=V.add(bA,V.add(V.rotY([0,0,-.06],by),[0,-.05+s.backHeel,0]));L[32]=V.add(bA,V.add(V.rotY([0,0,.17],by),[0,-.06,0]));
+ L[25]=ik(L[23],L[27],.47,.47,[.15,0,1]);L[26]=ik(L[24],L[28],.47,.47,[-.1,0,1]);
+ const knob=V.sub(L[15],V.mul(bd,.05));
+ return{lm:L,bat:[knob,V.add(knob,V.mul(bd,.86))]}}
+
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+
+/* 示範資料：6 次揮棒、821 影格、30 fps */
+const PROFILES=[
+ {hip:.93,sep:.92,cx:.95,head:[.02,-.01,.01],stretch:1.05,attack:0,early:0},
+ {hip:.80,sep:.60,cx:.72,head:[.06,-.03,.02],stretch:1.18,attack:-.12,early:2},
+ {hip:.88,sep:.82,cx:.50,head:[.10,-.05,0],stretch:1.10,attack:.14,early:0},
+ {hip:.97,sep:1.0,cx:1.0,head:[.01,0,.01],stretch:1.0,attack:.02,early:0},
+ {hip:.74,sep:.50,cx:.62,head:[.05,-.02,.04],stretch:1.25,attack:-.06,early:3},
+ {hip:.86,sep:.78,cx:.85,head:[.07,-.04,.01],stretch:1.12,attack:.08,early:1}
+];
+const DEMO_STARTS=[.9,5.3,9.7,14.1,18.5,22.9];
+function genDemo(){
+ const fps=30,N=821,chs=PROFILES.map(makeChannels),rng=mulberry32(7),frames=[];
+ for(let f=0;f<N;f++){const t=f/fps;let s=null;
+  for(let i=0;i<chs.length;i++){const lt=t-DEMO_STARTS[i];if(lt>-.2&&lt<endT(chs[i])+1.6){s=stateAtLocal(chs[i],lt);break}}
+  if(!s)s=stateAtLocal(chs[0],-1);
+  s.hipRot+=1.2*Math.sin(t*1.7);s.shRot+=1.2*Math.sin(t*1.7+.4);s.cx+=.006*Math.sin(t*1.1);
+  const p=buildPose(s);p.lm=p.lm.map(q=>[q[0]+(rng()-.5)*.008,q[1]+(rng()-.5)*.008,q[2]+(rng()-.5)*.008]);
+  frames.push(p)}
+ return{fps,frames,source:'demo'}}
+
+/* 偵測與計算 */
+function handPos(fr){return V.mid(fr.lm[15],fr.lm[16])}
+function handSpeeds(frames,fps){const n=frames.length,P=frames.map(handPos),s=new Array(n).fill(0);
+ for(let i=1;i<n-1;i++)s[i]=V.len(V.sub(P[i+1],P[i-1]))*fps/2;if(n>1){s[0]=s[1];s[n-1]=s[n-2]}
+ return s.map((_,i)=>(s[Math.max(0,i-1)]+2*s[i]+s[Math.min(n-1,i+1)])/4)}
+function detectImpacts(sp,fps){const mx=Math.max(...sp),thr=Math.max(2.0,.45*mx),c=[];
+ for(let i=1;i<sp.length-1;i++)if(sp[i]>thr&&sp[i]>=sp[i-1]&&sp[i]>=sp[i+1])c.push(i);
+ c.sort((a,b)=>sp[b]-sp[a]);const pick=[],gap=1.5*fps;
+ for(const i of c)if(pick.every(j=>Math.abs(j-i)>gap))pick.push(i);return pick.sort((a,b)=>a-b)}
+function unwrap(a){const o=[a[0]];for(let i=1;i<a.length;i++){let d=a[i]-a[i-1];while(d>180)d-=360;while(d<-180)d+=360;o.push(o[i-1]+d)}return o}
+function computeMetrics(frames,fps,s,imp){
+ const P=f=>frames[f].lm,n=frames.length;
+ const a=Math.min(n-1,imp+1),b=Math.max(0,imp-1),dv=V.sub(handPos(frames[a]),handPos(frames[b]));
+ const attack=Math.atan2(dv[1],Math.hypot(dv[0],dv[2]))*DEG;
+ const d27=V.len(V.sub(P(imp)[27],P(s)[27])),d28=V.len(V.sub(P(imp)[28],P(s)[28]));
+ const fi=d27>=d28?27:28,bi=fi==27?28:27,b0=P(s)[bi],fI=P(imp)[fi];
+ let ax=[fI[0]-b0[0],fI[2]-b0[2]];const W=Math.hypot(ax[0],ax[1])||1;ax=[ax[0]/W,ax[1]/W];
+ const hp=f=>{const h=V.mid(P(f)[23],P(f)[24]);return(h[0]-b0[0])*ax[0]+(h[2]-b0[2])*ax[1]};
+ let minH=Infinity;for(let f=s;f<=imp;f++)minH=Math.min(minH,hp(f));
+ const weightCm=(hp(imp)-minH)*100,weightPct=(hp(imp)-minH)/W*100;
+ const yaw=(p,q)=>Math.atan2(p[2]-q[2],p[0]-q[0])*DEG;
+ let sh=[],hi=[];for(let f=s;f<=imp;f++){sh.push(yaw(P(f)[11],P(f)[12]));hi.push(yaw(P(f)[23],P(f)[24]))}
+ sh=unwrap(sh);hi=unwrap(hi);const sg=sh[sh.length-1]-sh[0]>=0?1:-1;sh=sh.map(x=>x*sg);hi=hi.map(x=>x*sg);
+ const L=sh.length-1,shoulderRot=sh[L]-Math.min(...sh),hipRot=hi[L]-Math.min(...hi);
+ const sep=sh.map((x,i)=>x-hi[i]);const separation=Math.max(...sep.map(x=>Math.abs(x-sep[0])));
+ const cS=sh.indexOf(Math.min(...sh)),cH=hi.indexOf(Math.min(...hi));
+ let sS=L,sH=L;for(let k=cS;k<=L;k++)if(sh[k]-sh[cS]>15){sS=k;break}for(let k=cH;k<=L;k++)if(hi[k]-hi[cH]>15){sH=k;break}
+ const leadMs=(sS-sH)/fps*1000;
+ const sp=handSpeeds(frames.slice(Math.max(0,imp-4),Math.min(n,imp+5)),fps);const handPeak=Math.max(...sp.slice(1,-1));
+ const n0=P(s)[0];let head=0;for(let f=s;f<=imp;f++)head=Math.max(head,V.len(V.sub(P(f)[0],n0)));
+ return{attack,shoulderRot,hipRot,separation,handPeak,batKmh:handPeak*3.3*3.6,weightCm,weightPct,head:head*100,leadMs,frontIdx:fi,backIdx:bi,axis:ax}}
+
+function flawsOf(m,T){const F=[];
+ if(m.attack<T.attack-6)F.push('仰角過平');else if(m.attack>T.attack+8)F.push('仰角過大');
+ if(m.shoulderRot<T.shoulderRot*.82)F.push('上半身旋轉不足');
+ if(m.separation<T.separation*.7)F.push('肩髖分離不足');
+ if(m.handPeak<T.handPeak*.88)F.push('揮棒速度偏慢');
+ if(m.weightCm<T.weightCm*.7)F.push('重心未前移');
+ if(m.head>T.head+4)F.push('頭部晃動');
+ if(m.leadMs<=0&&T.leadMs>0)F.push('肩膀提前打開');
+ return F}
+
+const TPL_CH=makeChannels(null);
+const TPL_REF=(()=>{const fps=30,fr=[];for(let f=0;f<=100;f++)fr.push(buildPose(stateAtLocal(TPL_CH,-.5+f/fps)));
+ const sp=handSpeeds(fr,fps);let imp=0;sp.forEach((v,i)=>{if(v>sp[imp])imp=i});
+ const s=Math.max(0,imp-Math.round(1.1*fps));
+ return{impactT:-.5+imp/fps,m:computeMetrics(fr,fps,s,imp)}})();
+function tplPose(lt){return buildPose(stateAtLocal(TPL_CH,lt))}
+
+/* 身體尺寸：軀幹＋大腿＋小腿，用來把模板縮放到打者本人的體型 */
+function bodySize(L){return V.len(V.sub(V.mid(L[11],L[12]),V.mid(L[23],L[24])))+(V.len(V.sub(L[23],L[25]))+V.len(V.sub(L[24],L[26])))/2+(V.len(V.sub(L[25],L[27]))+V.len(V.sub(L[26],L[28])))/2}
+const TPL_SIZE=bodySize(buildPose(stateAtLocal(makeChannels(null),0)).lm);
+function tplScaled(sc){const T={...TPL_REF.m};['weightCm','head','handPeak','batKmh'].forEach(k=>T[k]*=sc);return T}
+function alignFor(frames,s,imp,m){
+ const sz=[];for(let f=s;f<=imp;f++)sz.push(bodySize(frames[f].lm));sz.sort((a,b)=>a-b);const sc=sz[sz.length>>1]/TPL_SIZE;
+ const U=frames[s].lm,th=tplPose(0).lm,foot=L=>V.add(V.sub(L[31],L[29]),V.sub(L[32],L[30]));
+ const rot=Math.atan2(-m.axis[1],m.axis[0])*DEG,uf=foot(U),tf=V.rotY(foot(th),rot),mir=(uf[0]*tf[0]+uf[2]*tf[2])<0;
+ const T=q=>V.mul(V.rotY(mirZ(q,mir),rot),sc);
+ const uh=V.mid(U[23],U[24]),tc=T(V.mid(th[23],th[24]));
+ const ug=Math.min(U[27][1],U[28][1]),tg=Math.min(T(th[27])[1],T(th[28])[1]);
+ return{rot,mir,sc,off:[uh[0]-tc[0],ug-tg,uh[2]-tc[2]]}}
+const mirZ=(q,m)=>m?[q[0],q[1],-q[2]]:q;
+function analyzeSession(sess){const{frames,fps}=sess;sess.speed=handSpeeds(frames,fps);
+ const imps=detectImpacts(sess.speed,fps);
+ sess.swings=imps.map((imp,i)=>{const s=Math.max(0,imp-Math.round(1.1*fps)),e=Math.min(frames.length-1,imp+Math.round(.8*fps));
+  const m=computeMetrics(frames,fps,s,imp);
+  const align=alignFor(frames,s,imp,m);
+  return{id:i+1,start:s,impact:imp,end:e,m,flaws:flawsOf(m,tplScaled(align.sc)),include:true,align,T:tplScaled(align.sc)}});
+ return sess}
+</script><script>
+/* ===== UI ===== */
+const $=q=>document.querySelector(q),$$=q=>[...document.querySelectorAll(q)];
+const S={sess:null,frame:0,playing:false,speed:.5,sel:'avg',showTpl:true,showTrail:true,loop:true,trailKey:null};
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=(v,d=1)=>(v==null||isNaN(v))?'–':v.toFixed(d);
+
+/* ---------- 3D ---------- */
+const R3={};
+function init3D(){
+ const el=$('#three');const r=new THREE.WebGLRenderer({antialias:true});r.setPixelRatio(Math.min(devicePixelRatio,2));
+ el.appendChild(r.domElement);R3.r=r;R3.el=el;
+ const sc=new THREE.Scene();R3.sc=sc;R3.cam=new THREE.PerspectiveCamera(38,1,.05,60);
+ sc.add(new THREE.HemisphereLight(0xffffff,0x445566,.95));const dl=new THREE.DirectionalLight(0xffffff,.55);dl.position.set(2,4,3);sc.add(dl);
+ R3.grid=new THREE.GridHelper(6,24);sc.add(R3.grid);
+ const sh=new THREE.Shape();[[.215,0],[.215,.215],[0,.43],[-.215,.215],[-.215,0]].forEach((p,i)=>i?sh.lineTo(p[0],p[1]):sh.moveTo(p[0],p[1]));
+ R3.plateMat=new THREE.MeshBasicMaterial({color:0xffffff,side:THREE.DoubleSide});
+ const plate=new THREE.Mesh(new THREE.ShapeGeometry(sh),R3.plateMat);plate.rotation.x=-Math.PI/2;plate.rotation.z=Math.PI/2;plate.position.set(.1,.003,.72);sc.add(plate);
+ R3.act=makeSkel(1);R3.tpl=makeSkel(.55);sc.add(R3.act.g,R3.tpl.g);
+ R3.trailA=makeLine();R3.trailT=makeLine();sc.add(R3.trailA,R3.trailT);
+ R3.orb={th:.55,ph:1.2,r:3.7,tg:new THREE.Vector3(.05,.9,.2)};
+ const ptr=new Map();let pd=0;
+ r.domElement.addEventListener('pointerdown',e=>{r.domElement.setPointerCapture(e.pointerId);ptr.set(e.pointerId,[e.clientX,e.clientY])});
+ r.domElement.addEventListener('pointermove',e=>{if(!ptr.has(e.pointerId))return;const p=ptr.get(e.pointerId);
+  if(ptr.size===1){R3.orb.th-=(e.clientX-p[0])*.008;R3.orb.ph=Math.min(1.52,Math.max(.12,R3.orb.ph-(e.clientY-p[1])*.008))}
+  ptr.set(e.pointerId,[e.clientX,e.clientY]);
+  if(ptr.size===2){const [a,b]=[...ptr.values()];const d=Math.hypot(a[0]-b[0],a[1]-b[1]);if(pd)R3.orb.r=Math.min(8,Math.max(1.6,R3.orb.r*pd/d));pd=d}
+  S.dirty=true});
+ const up=e=>{ptr.delete(e.pointerId);pd=0};r.domElement.addEventListener('pointerup',up);r.domElement.addEventListener('pointercancel',up);
+ r.domElement.addEventListener('wheel',e=>{e.preventDefault();R3.orb.r=Math.min(8,Math.max(1.6,R3.orb.r*(1+e.deltaY*.001)));S.dirty=true},{passive:false});
+ new ResizeObserver(()=>{const w=el.clientWidth,h=el.clientHeight;r.setSize(w,h);R3.cam.aspect=w/h;R3.cam.updateProjectionMatrix();S.dirty=true}).observe(el);
+ applyTheme3D()}
+function makeLine(){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(3*120),3));g.setDrawRange(0,0);
+ return new THREE.Line(g,new THREE.LineBasicMaterial({transparent:true,opacity:.9}))}
+function makeSkel(op){const g=new THREE.Group();
+ const mat=new THREE.MeshStandardMaterial({roughness:.45,emissiveIntensity:.35,transparent:op<1,opacity:op,depthWrite:op>=1});
+ const sp=new THREE.SphereGeometry(1,14,10),cy=new THREE.CylinderGeometry(1,1,1,10);
+ const J=[...Array(33)].map((_,i)=>{const m=new THREE.Mesh(sp,mat);const r=i<11?.011:(i>=17&&i<=22?.012:.026);m.scale.setScalar(r);g.add(m);return m});
+ const B=BONES.map(([a])=>{const m=new THREE.Mesh(cy,mat);m.userData.r=a<11?.005:.017;g.add(m);return m});
+ const batMat=new THREE.MeshStandardMaterial({roughness:.5,transparent:op<1,opacity:op*.9,depthWrite:op>=1});
+ const bat=new THREE.Mesh(new THREE.CylinderGeometry(.033,.013,1,12),batMat);g.add(bat);
+ return{g,J,B,bat,mat,batMat}}
+const UPV=new THREE.Vector3(0,1,0);
+function place(m,a,b,r){const A=new THREE.Vector3(...a),Bv=new THREE.Vector3(...b),d=Bv.clone().sub(A),l=d.length()||1e-4;
+ m.position.copy(A).addScaledVector(d,.5);m.quaternion.setFromUnitVectors(UPV,d.divideScalar(l));m.scale.set(r,l,r)}
+function setSkel(sk,pose){if(!pose){sk.g.visible=false;return}sk.g.visible=true;const L=pose.lm;
+ sk.J.forEach((m,i)=>m.position.set(...L[i]));BONES.forEach(([a,b],i)=>place(sk.B[i],L[a],L[b],sk.B[i].userData.r));
+ if(pose.bat){sk.bat.visible=true;place(sk.bat,pose.bat[0],pose.bat[1],1)}else sk.bat.visible=false}
+function setLine(line,pts){const a=line.geometry.attributes.position.array;const n=Math.min(pts.length,120);
+ for(let i=0;i<n;i++){a[i*3]=pts[i][0];a[i*3+1]=pts[i][1];a[i*3+2]=pts[i][2]}line.geometry.attributes.position.needsUpdate=true;line.geometry.setDrawRange(0,n)}
+function applyTheme3D(){if(!R3.r)return;const ca=new THREE.Color(css('--act')),ct=new THREE.Color(css('--tpl'));
+ R3.r.setClearColor(new THREE.Color(css('--stage')));
+ [[R3.act,ca],[R3.tpl,ct]].forEach(([k,c])=>{k.mat.color.copy(c);k.mat.emissive.copy(c);k.batMat.color.copy(c).lerp(new THREE.Color(css('--chalk')),.35)});
+ R3.trailA.material.color.copy(ca);R3.trailT.material.color.copy(ct);
+ R3.sc.remove(R3.grid);R3.grid=new THREE.GridHelper(6,24,new THREE.Color(css('--grid-a')),new THREE.Color(css('--grid-b')));R3.sc.add(R3.grid);
+ R3.plateMat.color=new THREE.Color(css('--chalk'));S.dirty=true}
+function cam3D(){const o=R3.orb,c=R3.cam;c.position.set(o.tg.x+o.r*Math.sin(o.ph)*Math.sin(o.th),o.tg.y+o.r*Math.cos(o.ph),o.tg.z+o.r*Math.sin(o.ph)*Math.cos(o.th));c.lookAt(o.tg)}
+
+/* ---------- 姿勢取樣 ---------- */
+function actPose(fr){const F=S.sess.frames,i=Math.floor(fr),j=Math.min(F.length-1,i+1),u=fr-i,a=F[Math.max(0,i)],b=F[j];
+ const lm=a.lm.map((p,k)=>V.lerp(p,b.lm[k],u));return{lm,bat:a.bat&&b.bat?[V.lerp(a.bat[0],b.bat[0],u),V.lerp(a.bat[1],b.bat[1],u)]:null}}
+function swingAt(fr){const W=S.sess.swings,fps=S.sess.fps;let best=null,bd=1e9;
+ for(const w of W){const d=fr-w.impact;if(d>-1.6*fps&&d<2.6*fps&&Math.abs(d)<bd){bd=Math.abs(d);best=w}}return best}
+function tplAt(fr,w){const fps=S.sess.fps;w=w||swingAt(fr)||S.sess.swings[0];if(!w)return null;
+ const lt=(fr-w.impact)/fps+TPL_REF.impactT,p=tplPose(lt),al=w.align;
+ const tr=q=>V.add(V.mul(V.rotY(mirZ(q,al.mir),al.rot),al.sc),al.off);return{lm:p.lm.map(tr),bat:p.bat.map(tr)}}
+
+/* ---------- 2D 畫面 ---------- */
+function drawSkel2D(ctx,P,color,lw,alpha){ctx.save();ctx.globalAlpha=alpha;ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineCap='round';
+ BONES.forEach(([a,b])=>{ctx.lineWidth=a<11?lw*.4:lw;ctx.beginPath();ctx.moveTo(...P[a]);ctx.lineTo(...P[b]);ctx.stroke()});
+ P.forEach((p,i)=>{if(i<11&&i!==0)return;ctx.beginPath();ctx.arc(p[0],p[1],i===0?lw*1.4:lw*.9,0,7);ctx.fill()});ctx.restore()}
+function draw2D(fr){const cv=$('#cv2d'),box=$('#vbox'),dpr=Math.min(devicePixelRatio,2),W=box.clientWidth,H=box.clientHeight;
+ if(cv.width!==W*dpr||cv.height!==H*dpr){cv.width=W*dpr;cv.height=H*dpr}
+ const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);
+ const act=css('--act'),lw=Math.max(2.5,W/170);
+ if(S.sess.source==='demo'){
+  const gy=H*.86,k=H/2.3,cx=W/2;const pr=p=>{const s=1+p[2]*.09;return[cx+(p[0]-.1)*k*s,gy-p[1]*k*s]};
+  const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,css('--sky'));g.addColorStop(.62,css('--sky2'));g.addColorStop(.62,css('--dirt'));g.addColorStop(1,css('--dirt2'));
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle=css('--chalk');ctx.globalAlpha=.55;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(cx-1.1*k,gy+.08*k);ctx.lineTo(cx+1.25*k,gy+.08*k);ctx.stroke();ctx.globalAlpha=1;
+  const p=actPose(fr),P=p.lm.map(pr);
+  if(p.bat){ctx.strokeStyle=css('--chalk');ctx.lineWidth=lw*1.3;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(...pr(p.bat[0]));ctx.lineTo(...pr(p.bat[1]));ctx.stroke()}
+  drawSkel2D(ctx,P,act,lw,1);
+ }else{const v=$('#vid'),F=S.sess.frames[Math.round(fr)];if(!v.videoWidth||!F||!F.img)return;
+  const s=Math.min(W/v.videoWidth,H/v.videoHeight),w=v.videoWidth*s,h=v.videoHeight*s,ox=(W-w)/2,oy=(H-h)/2;
+  drawSkel2D(ctx,F.img.map(q=>[ox+q[0]*w,oy+q[1]*h]),act,lw,.95)}}
+
+/* ---------- 時間軸 ---------- */
+function drawTimeline(){const cv=$('#tl'),dpr=Math.min(devicePixelRatio,2),W=cv.clientWidth,H=cv.clientHeight;
+ if(cv.width!==W*dpr||cv.height!==H*dpr){cv.width=W*dpr;cv.height=H*dpr}
+ const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);
+ const sp=S.sess.speed,N=sp.length,mx=Math.max(...sp,1)*1.1,X=f=>f/(N-1)*W,Y=v=>H-6-(v/mx)*(H-24);
+ S.sess.swings.forEach(w=>{const sel=S.sel===w.id;ctx.fillStyle=css(sel?'--act-soft2':'--act-soft');ctx.fillRect(X(w.start),0,X(w.end)-X(w.start),H);
+  ctx.strokeStyle=css('--act');ctx.lineWidth=1;ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(X(w.impact),14);ctx.lineTo(X(w.impact),H);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle=css('--text');ctx.font='600 11px "Barlow Condensed",sans-serif';ctx.textAlign='center';ctx.fillText('#'+w.id+(w.flaws.length?' ·'+w.flaws.length:''),X(w.impact),11)});
+ ctx.strokeStyle=css('--muted');ctx.lineWidth=1.3;ctx.beginPath();sp.forEach((v,i)=>i?ctx.lineTo(X(i),Y(v)):ctx.moveTo(X(i),Y(v)));ctx.stroke();
+ const px=X(S.frame);ctx.strokeStyle=css('--text');ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(px,0);ctx.lineTo(px,H);ctx.stroke()}
+function drawOverlay(){const cv=$('#ov'),dpr=Math.min(devicePixelRatio,2),W=cv.clientWidth,H=cv.clientHeight;
+ if(cv.width!==W*dpr||cv.height!==H*dpr){cv.width=W*dpr;cv.height=H*dpr}
+ const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);
+ const fps=S.sess.fps,t0=-.6,t1=.5,pl=30,pb=20,X=t=>pl+(t-t0)/(t1-t0)*(W-pl-8),mx=11,Y=v=>H-pb-(v/mx)*(H-pb-8);
+ ctx.strokeStyle=css('--line');ctx.fillStyle=css('--muted');ctx.font='11px "Barlow Condensed",sans-serif';ctx.lineWidth=1;
+ for(let v=0;v<=10;v+=5){ctx.beginPath();ctx.moveTo(pl,Y(v));ctx.lineTo(W-8,Y(v));ctx.stroke();ctx.textAlign='right';ctx.fillText(v,pl-5,Y(v)+4)}
+ ctx.textAlign='center';[-.5,-.25,0,.25].forEach(t=>ctx.fillText((t===0?'IMPACT':(t>0?'+':'')+t+'s'),X(t),H-5));
+ ctx.strokeStyle=css('--text');ctx.globalAlpha=.4;ctx.beginPath();ctx.moveTo(X(0),6);ctx.lineTo(X(0),H-pb);ctx.stroke();ctx.globalAlpha=1;
+ const sp=S.sess.speed,inc=S.sess.swings.filter(w=>w.include),K=Math.round((t1-t0)*fps),avg=new Array(K+1).fill(0);
+ const curve=(fn,col,lw,a,dash)=>{ctx.strokeStyle=col;ctx.lineWidth=lw;ctx.globalAlpha=a;ctx.setLineDash(dash||[]);ctx.beginPath();for(let k=0;k<=K;k++){const t=t0+k/fps,v=fn(t,k);if(v==null)continue;k?ctx.lineTo(X(t),Y(v)):ctx.moveTo(X(t),Y(v))}ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=1};
+ inc.forEach(w=>{const g=(t,k)=>{const f=w.impact+Math.round(t*fps);const v=sp[Math.min(sp.length-1,Math.max(0,f))];avg[k]+=v/inc.length;return v};
+  curve(g,css('--act'),S.sel===w.id?2.4:1.1,S.sel===w.id?1:.35)});
+ if(inc.length)curve((t,k)=>avg[k],css('--act'),3,1);
+ if(S.showTpl){const tf=[];for(let k=-1;k<=K+1;k++)tf.push(tplPose(TPL_REF.impactT+t0+k/fps));const tsc=curT().handPeak/TPL_REF.m.handPeak,ts=handSpeeds(tf,fps).map(x=>x*tsc);curve((t,k)=>ts[k+1],css('--tpl'),2.2,1,[6,4])}}
+
+/* ---------- 數據面板 ---------- */
+const METRICS=[
+ {k:'attack',t:'打擊仰角',u:'°',d:1,sub:m=>'擊球瞬間手部軌跡仰角',st:(v,T)=>v<T.attack-6||v>T.attack+8},
+ {k:'shoulderRot',t:'上半身旋轉',u:'°',d:0,sub:m=>'髖部 '+fmt(m.hipRot,0)+'°',st:(v,T)=>v<T.shoulderRot*.82},
+ {k:'separation',t:'肩髖分離',u:'°',d:0,sub:()=>'蓄力到擊球的最大扭轉差',st:(v,T)=>v<T.separation*.7},
+ {k:'batKmh',t:'揮棒速度',u:'km/h',d:0,sub:m=>'手部峰值 '+fmt(m.handPeak)+' m/s（棒速為估計）',st:(v,T)=>v<T.batKmh*.88},
+ {k:'weightCm',t:'重心轉移',u:'cm',d:0,sub:m=>'骨盆前移，約步幅 '+fmt(m.weightPct,0)+'%',st:(v,T)=>v<T.weightCm*.7},
+ {k:'head',t:'頭部位移',u:'cm',d:1,sub:()=>'數值越小越穩定',st:(v,T)=>v>T.head+4},
+ {k:'leadMs',t:'髖部領先肩膀',u:'ms',d:0,sub:()=>'動力鏈順序，負值代表肩膀先開',st:(v,T)=>v<=0}
+];
+function avgM(ws){const o={};if(!ws.length)return null;for(const k in ws[0].m)if(typeof ws[0].m[k]==='number')o[k]=ws.reduce((s,w)=>s+w.m[k],0)/ws.length;return o}
+function curT(){const ws=S.sel==='avg'?S.sess.swings.filter(w=>w.include):S.sess.swings.filter(w=>w.id===S.sel);if(!ws.length)return TPL_REF.m;return tplScaled(ws.reduce((a,w)=>a+w.align.sc,0)/ws.length)}
+function curM(){if(S.sel==='avg')return avgM(S.sess.swings.filter(w=>w.include));const w=S.sess.swings.find(w=>w.id===S.sel);return w&&w.m}
+function renderMetrics(){const m=curM(),T=curT(),el=$('#metrics');
+ if(!m){el.innerHTML='<p class="empty">還沒有可計算的揮棒。</p>';return}
+ const n=S.sess.swings.filter(w=>w.include).length;
+ $('#mTitle').textContent=S.sel==='avg'?`${n} 次揮棒平均`:`第 ${S.sel} 次揮棒`;
+ el.innerHTML=METRICS.map(x=>{const v=m[x.k],bad=x.st(v,T),d=v-T[x.k];
+  return`<div class="mc ${bad?'bad':'ok'}"><div class="mt">${x.t}</div><div class="mv">${fmt(v,x.d)}<small>${x.u}</small></div>
+  <div class="mi"><span class="tp">理想 ${fmt(T[x.k],x.d)}</span><span class="dl">${d>=0?'+':''}${fmt(d,x.d)}</span></div><div class="ms">${x.sub(m)}</div></div>`}).join('')}
+function renderChips(){$('#chips').innerHTML=`<button class="chip ${S.sel==='avg'?'on':''}" data-s="avg">平均</button>`+
+ S.sess.swings.map(w=>`<button class="chip ${S.sel===w.id?'on':''} ${w.include?'':'off'}" data-s="${w.id}">第 ${w.id} 次${w.flaws.length?`<i>${w.flaws.length}</i>`:''}</button>`).join('');
+ $$('#chips .chip').forEach(b=>b.onclick=()=>selectSwing(b.dataset.s==='avg'?'avg':+b.dataset.s))}
+function renderTable(){const W=S.sess.swings,T=S.sel==='avg'?curT():tplScaled(W.filter(w=>w.include).reduce((a,w,_,r)=>a+w.align.sc/r.length,0)||1),inc=W.filter(w=>w.include),A=avgM(inc);
+ const cells=m=>`<td>${fmt(m.attack)}°</td><td>${fmt(m.shoulderRot,0)}°</td><td>${fmt(m.separation,0)}°</td><td>${fmt(m.batKmh,0)}</td><td>${fmt(m.weightCm,0)}</td><td>${fmt(m.head)}</td><td>${fmt(m.leadMs,0)}</td>`;
+ $('#tbody').innerHTML=W.map(w=>`<tr class="${S.sel===w.id?'on':''}" data-s="${w.id}"><td><input type="checkbox" aria-label="納入平均" ${w.include?'checked':''} data-i="${w.id}"></td><td>${w.id}</td><td>${w.impact}</td>${cells(w.m)}<td class="tags">${w.flaws.map(f=>`<span>${f}</span>`).join('')||'<em>無明顯瑕疵</em>'}</td></tr>`).join('')+
+  (A?`<tr class="avg"><td></td><td colspan="2">平均（${inc.length}）</td>${cells(A)}<td></td></tr>`:'')+
+  `<tr class="tplr"><td></td><td colspan="2">理想模板</td>${cells(T)}<td></td></tr>`;
+ $$('#tbody tr[data-s]').forEach(tr=>tr.onclick=e=>{if(e.target.tagName==='INPUT')return;selectSwing(+tr.dataset.s)});
+ $$('#tbody input').forEach(c=>c.onchange=()=>{S.sess.swings.find(w=>w.id===+c.dataset.i).include=c.checked;refreshData()});
+ const cnt={};inc.forEach(w=>w.flaws.forEach(f=>cnt[f]=(cnt[f]||0)+1));const E=Object.entries(cnt).sort((a,b)=>b[1]-a[1]);
+ $('#flaws').innerHTML=E.length?E.map(([f,c])=>`<div class="fr"><span class="fn">${f}</span><span class="fb"><b style="width:${c/inc.length*100}%"></b></span><span class="fc">${c}/${inc.length}</span></div>`).join(''):'<p class="empty">納入的揮棒都沒有偵測到瑕疵。</p>'}
+function refreshData(){renderChips();renderMetrics();renderTable();drawOverlay();S.trailKey=null;S.dirty=true}
+function selectSwing(id){S.sel=id;if(id!=='avg'){const w=S.sess.swings.find(w=>w.id===id);seek(w.start)}refreshData()}
+
+/* ---------- 播放 ---------- */
+const isVid=()=>S.sess&&S.sess.source==='video';
+function seek(f){f=Math.max(0,Math.min(S.sess.frames.length-1,f));S.frame=f;if(isVid()){const v=$('#vid');v.currentTime=f/S.sess.fps}S.dirty=true}
+function setPlay(p){S.playing=p;$('#play').textContent=p?'暫停':'播放';$('#play').setAttribute('aria-pressed',p);
+ if(isVid()){const v=$('#vid');v.playbackRate=S.speed;p?v.play().catch(()=>{}):v.pause()}}
+function curWin(){if(S.sel!=='avg'&&S.loop){const w=S.sess.swings.find(w=>w.id===S.sel);if(w)return[w.start,w.end]}return[0,S.sess.frames.length-1]}
+let last=0;
+function tick(ts){const dt=Math.min(.1,(ts-last)/1000);last=ts;
+ if(S.sess){if(S.playing){const[a,b]=curWin();
+  if(isVid()){const v=$('#vid');S.frame=v.currentTime*S.sess.fps;if(S.frame>=b||v.ended){seek(a);if(v.paused)v.play().catch(()=>{})}}
+  else{S.frame+=dt*S.sess.fps*S.speed;if(S.frame>b||S.frame<a)S.frame=a}S.dirty=true}
+  if(S.dirty){render();S.dirty=false}}
+ requestAnimationFrame(tick)}
+function render(){const fr=S.frame,fi=Math.round(fr),N=S.sess.frames.length;
+ setSkel(R3.act,actPose(fr));const w=swingAt(fr);setSkel(R3.tpl,S.showTpl?tplAt(fr,w):null);
+ const key=w?w.id+':'+S.showTrail+S.showTpl:'none';
+ if(key!==S.trailKey){S.trailKey=key;if(w&&S.showTrail){const a=[],t=[];for(let f=w.start;f<=w.end;f++){a.push(handPos(S.sess.frames[f]));t.push(handPos(tplAt(f,w)))}
+  setLine(R3.trailA,a);setLine(R3.trailT,S.showTpl?t:[])}else{setLine(R3.trailA,[]);setLine(R3.trailT,[])}}
+ cam3D();R3.r.render(R3.sc,R3.cam);draw2D(fr);drawTimeline();
+ $('#scrub').value=fi;$('#fl').textContent=`影格 ${fi} / ${N-1}`;$('#tl2').textContent=(fr/S.sess.fps).toFixed(2)+' s';
+ const hit=S.sess.swings.find(x=>Math.abs(fi-x.impact)<=1);$('#impact').hidden=!hit;if(hit)$('#impact').textContent=`IMPACT · 第 ${hit.id} 次`}
+
+/* ---------- 載入資料 ---------- */
+function loadSession(sess){analyzeSession(sess);S.sess=sess;S.sel='avg';S.frame=0;
+ $('#scrub').max=sess.frames.length-1;
+ $('#status').textContent=(sess.source==='demo'?'示範資料':'你的影片')+`：${sess.swings.length} 次揮棒，${sess.frames.length} 影格，${sess.fps} fps`;
+ $('#vid').hidden=sess.source==='demo';$('#vtag').textContent=sess.source==='demo'?'模擬畫面（示範資料沒有真實影片）':'原始影片＋2D 骨架';
+ if(!sess.swings.length)toast('沒有偵測到揮棒：影片中手部速度沒有明顯峰值。請確認全身入鏡、光線足夠，建議 60 fps 以上。');
+ refreshData();seek(sess.swings[0]?sess.swings[0].start:0)}
+
+/* ---------- 影片分析（MediaPipe Pose Landmarker） ---------- */
+const MP_VER='0.10.14';let mpTs=0,landmarker=null,modelBuf=null,cancel=false;
+async function getLandmarker(){if(landmarker)return landmarker;
+ const mp=await import(`https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MP_VER}/vision_bundle.mjs`);
+ const fs=await mp.FilesetResolver.forVisionTasks(`https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MP_VER}/wasm`);
+ const base=modelBuf?{modelAssetBuffer:new Uint8Array(modelBuf)}:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task'};
+ const opt=d=>({baseOptions:{...base,delegate:d},runningMode:'VIDEO',numPoses:1});
+ try{landmarker=await mp.PoseLandmarker.createFromOptions(fs,opt('GPU'))}catch(e){landmarker=await mp.PoseLandmarker.createFromOptions(fs,opt('CPU'))}
+ return landmarker}
+const seekVid=(v,t)=>new Promise(r=>{const h=()=>{v.removeEventListener('seeked',h);r()};v.addEventListener('seeked',h);v.currentTime=t});
+function gauss(frames,key){const n=frames.length,w=[1,4,6,4,1];return frames.map((_,i)=>frames[i][key].map((_,j)=>{const o=[0,0,0];let s=0;
+ for(let k=-2;k<=2;k++){const f=frames[Math.min(n-1,Math.max(0,i+k))][key][j];for(let d=0;d<f.length;d++)o[d]+=f[d]*w[k+2];s+=w[k+2]}return o.slice(0,frames[i][key][j].length).map(x=>x/s)}))}
+async function analyzeVideo(file){
+ setPlay(false);const v=$('#vid');v.src=URL.createObjectURL(file);v.hidden=false;$('#vtag').textContent='原始影片';
+ await new Promise((r,j)=>{v.onloadedmetadata=r;v.onerror=()=>j(new Error('瀏覽器無法讀取這個影片格式'))});
+ const fps=+$('#sfps').value,dur=Math.min(v.duration,90),N=Math.floor(dur*fps);
+ showBusy('正在載入姿勢辨識模型…',0);cancel=false;
+ let lmk;try{lmk=await getLandmarker()}catch(e){showBusy(null);showErr(e,'load');return}
+ $('#err').hidden=true;
+ const raw=[];
+ for(let i=0;i<N;i++){if(cancel){showBusy(null);toast('已取消分析。');return}
+  await seekVid(v,i/fps);mpTs+=Math.max(1,Math.round(1000/fps));let r;
+  try{r=lmk.detectForVideo(v,mpTs)}catch(e){try{lmk.close()}catch(_){}landmarker=null;showBusy(null);showErr(e,'run');return}
+  if(r.worldLandmarks&&r.worldLandmarks[0])raw.push({lm:r.worldLandmarks[0].map(p=>[p.x,-p.y,-p.z]),img:r.landmarks[0].map(p=>[p.x,p.y]),px:r.landmarks[0].map(p=>[p.x*v.videoWidth,p.y*v.videoHeight])});else raw.push(null);
+  if(i%5===0)showBusy(`逐幀辨識 33 點骨架：${i+1} / ${N} 影格`,(i+1)/N)}
+ const first=raw.findIndex(x=>x);if(first<0){showBusy(null);toast('整段影片都沒有辨識到人體。請讓打者全身入鏡並避開逆光。');return}
+ for(let i=0;i<N;i++)if(!raw[i])raw[i]=raw[i-1]||raw[first];
+ /* MediaPipe 世界座標以每格的髖部中心為原點，會抹掉重心位移；用 2D 影像中的髖部移動量補回平移 */
+ const tor=(L)=>V.len(V.sub(V.mid(L[11],L[12]),V.mid(L[23],L[24]))),tor2=(P)=>Math.hypot((P[11][0]+P[12][0]-P[23][0]-P[24][0])/2,(P[11][1]+P[12][1]-P[23][1]-P[24][1])/2);
+ const ks=raw.map(r=>tor(r.lm)/(tor2(r.px)||1)).sort((a,b)=>a-b),k=ks[ks.length>>1];
+ const hp=P=>[(P[23][0]+P[24][0])/2,(P[23][1]+P[24][1])/2],h0p=hp(raw[first].px);
+ raw.forEach(r=>{const h=hp(r.px),T=[(h[0]-h0p[0])*k,-(h[1]-h0p[1])*k,0];r.lm=r.lm.map(p=>V.add(p,T))});
+ const sm=gauss(raw,'lm'),si=gauss(raw,'img');const frames=raw.map((_,i)=>({lm:sm[i],img:si[i],bat:null}));
+ const h0=V.mid(frames[first].lm[23],frames[first].lm[24]);let gy=Infinity;for(let i=first;i<Math.min(N,first+15);i++)gy=Math.min(gy,frames[i].lm[27][1],frames[i].lm[28][1]);
+ frames.forEach(f=>f.lm=f.lm.map(p=>[p[0]-h0[0],p[1]-gy+.08,p[2]-h0[2]]));
+ showBusy(null);loadSession({fps,frames,source:'video'})}
+function showBusy(msg,p){const b=$('#busy');if(!msg){b.hidden=true;return}b.hidden=false;$('#busyMsg').textContent=msg;$('#busyBar').style.width=(p*100)+'%'}
+function showErr(e,kind){$('#vid').hidden=true;$('#vtag').textContent='模擬畫面（示範資料沒有真實影片）';
+ const load=kind==='load';$('#errT').textContent=load?'姿勢辨識模型無法載入':'影片分析中斷';
+ $('#errHint').textContent=load?'這個頁面若在限制外部連線的環境中開啟，就會發生這種情況。把頁面存成 HTML 檔，用 Chrome 或 Edge 在電腦上直接開啟即可使用完整辨識；或先選擇已下載的 pose_landmarker_full.task 模型檔再試一次。':'辨識器已自動重設，請重新上傳影片再試一次。如果同一支影片反覆失敗，可能是格式或編碼不相容，建議轉成 H.264 的 MP4。';
+ $('#modelBtn').hidden=!load;$('#err').hidden=false;$('#errMsg').textContent=(e&&e.message)||String(e)}
+let tt;function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,6000)}
+
+/* ---------- YouTube 參考影片 ---------- */
+function parseYT(s){s=s.trim();let id=null,t=0;
+ try{const u=new URL(/^https?:/.test(s)?s:'https://'+s);const h=u.hostname.replace(/^www\.|^m\./,'');
+  if(h==='youtu.be')id=u.pathname.slice(1).split('/')[0];
+  else if(/youtube(-nocookie)?\.com$/.test(h)){id=u.searchParams.get('v');const m=u.pathname.match(/^\/(shorts|embed|live|v)\/([\w-]{11})/);if(m)id=m[2]}
+  const tp=u.searchParams.get('t')||u.searchParams.get('start');
+  if(tp){const m=tp.match(/^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s?)?$/);if(m)t=(+m[1]||0)*3600+(+m[2]||0)*60+(+m[3]||0)}
+ }catch(e){}
+ if(!id&&/^[\w-]{11}$/.test(s))id=s;
+ return id&&/^[\w-]{11}$/.test(id)?{id,t,shorts:/\/shorts\//.test(s)}:null}
+function loadYT(){const r=parseYT($('#yturl').value);if(!r){toast('看不懂這個網址，請貼 YouTube 影片或 Shorts 的網址。');return}
+ const st=Math.max(0,Math.round(+$('#ytstart').value||r.t));$('#ytstart').value=st||'';
+ const box=$('#ytbox');box.hidden=false;box.classList.toggle('tall',r.shorts);
+ box.innerHTML=`<iframe src="https://www.youtube-nocookie.com/embed/${r.id}?start=${st}&playsinline=1&rel=0&modestbranding=1" title="YouTube 參考影片" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
+ const a=$('#ytopen');a.href=`https://www.youtube.com/watch?v=${r.id}${st?'&t='+st+'s':''}`;a.hidden=false}
+
+/* ---------- 綁定 ---------- */
+function bind(){
+ $('#play').onclick=()=>setPlay(!S.playing);
+ $('#prev').onclick=()=>{setPlay(false);seek(Math.round(S.frame)-1)};$('#next').onclick=()=>{setPlay(false);seek(Math.round(S.frame)+1)};
+ $('#toImpact').onclick=()=>{setPlay(false);const w=S.sel!=='avg'?S.sess.swings.find(w=>w.id===S.sel):(swingAt(S.frame)||S.sess.swings[0]);if(w)seek(w.impact)};
+ $('#spd').onchange=e=>{S.speed=+e.target.value;if(isVid())$('#vid').playbackRate=S.speed};
+ $('#scrub').oninput=e=>{setPlay(false);seek(+e.target.value)};
+ $('#tplT').onchange=e=>{S.showTpl=e.target.checked;drawOverlay();S.dirty=true};
+ $('#trT').onchange=e=>{S.showTrail=e.target.checked;S.dirty=true};
+ $('#loopT').onchange=e=>{S.loop=e.target.checked};
+ $$('[data-view]').forEach(b=>b.onclick=()=>{const[th,ph]=b.dataset.view.split(',').map(Number);R3.orb.th=th;R3.orb.ph=ph;S.dirty=true});
+ $('#file').onchange=e=>{const f=e.target.files[0];if(f)analyzeVideo(f).catch(err=>{showBusy(null);showErr(err,'run')});e.target.value=''};
+ $('#model').onchange=async e=>{const f=e.target.files[0];if(!f)return;modelBuf=await f.arrayBuffer();landmarker=null;toast('已載入本機模型檔，請重新上傳影片。');$('#err').hidden=true};
+ $('#demo').onclick=()=>{$('#err').hidden=true;const v=$('#vid');v.pause();v.removeAttribute('src');loadSession(genDemo())};
+ $('#ytgo').onclick=loadYT;$('#yturl').onkeydown=e=>{if(e.key==='Enter')loadYT()};$('#ytstart').onkeydown=e=>{if(e.key==='Enter')loadYT()};
+ $('#cancel').onclick=()=>cancel=true;$('#errX').onclick=()=>$('#err').hidden=true;
+ const tl=$('#tl');let drag=false;const tseek=e=>{const r=tl.getBoundingClientRect();seek(Math.round((e.clientX-r.left)/r.width*(S.sess.frames.length-1)))};
+ tl.onpointerdown=e=>{drag=true;tl.setPointerCapture(e.pointerId);setPlay(false);tseek(e)};tl.onpointermove=e=>drag&&tseek(e);tl.onpointerup=()=>drag=false;
+ document.addEventListener('keydown',e=>{if(e.target.matches('input,select,button'))return;
+  if(e.key===' '){e.preventDefault();setPlay(!S.playing)}else if(e.key==='ArrowLeft'){setPlay(false);seek(Math.round(S.frame)-1)}else if(e.key==='ArrowRight'){setPlay(false);seek(Math.round(S.frame)+1)}else if(e.key==='i'||e.key==='I')$('#toImpact').click()});
+ new ResizeObserver(()=>{if(S.sess){drawOverlay();S.dirty=true}}).observe(document.body);
+ matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{applyTheme3D();if(S.sess)drawOverlay()});
+ $('#vid').addEventListener('seeked',()=>S.dirty=true)}
+init3D();bind();loadSession(genDemo());requestAnimationFrame(tick);
+</script></body></html>
